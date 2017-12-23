@@ -3,7 +3,7 @@ import hlt
 import logging
 
 # GAME START
-game = hlt.Game("Spaceinvader")
+game = hlt.Game("Spaceinvader-V1")
 # Then we print our start message to the logs
 logging.info("Starting my Bot!")
 
@@ -14,9 +14,6 @@ while True:
 
     # Here we define the set of commands to be sent to the Halite engine at the end of the turn
     command_queue = []
-
-    selected_planets = []
-
     # For every ship that I control
     for ship in game_map.get_me().all_ships():
         # If the ship is docked
@@ -25,12 +22,9 @@ while True:
             continue
 
         # For each planet in the game (only non-destroyed planets are included)
-        nearest_planet = game_map.all_planets()[0]
         for planet in game_map.all_planets():
-            if ship.calculate_distance_between(planet) < ship.calculate_distance_between(nearest_planet):
-                if planet not in selected_planets:
-                    nearest_planet = planet
-                    selected_planets.append(planet)
+            if planet.is_owned():
+                continue
 
             # If we can dock, let's (try to) dock. If two ships try to dock at once, neither will be able to.
             if ship.can_dock(planet):
@@ -40,14 +34,13 @@ while True:
                 navigate_command = ship.navigate(
                     ship.closest_point_to(planet),
                     game_map,
-                    speed=int(hlt.constants.MAX_SPEED),
+                    speed=int(hlt.constants.MAX_SPEED/2),
                     ignore_ships=True)
                 # If the move is possible, add it to the command_queue (if there are too many obstacles on the way
                 # or we are trapped (or we reached our destination!), navigate_command will return null;
                 if navigate_command:
                     command_queue.append(navigate_command)
             break
-
 
     game.send_command_queue(command_queue)
     # TURN END
